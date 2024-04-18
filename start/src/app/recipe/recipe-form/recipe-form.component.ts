@@ -4,7 +4,6 @@ import { AbstractControl, UntypedFormArray, UntypedFormControl, UntypedFormGroup
 import { ActivatedRoute, Router } from '@angular/router';
 import { Recipe, RecipeType, UnitOfMeasurement } from '../models/recipe';
 import { RecipeService } from '../services/recipe.service';
-import { getFromResolvers } from '../../utility';
 
 export function enumValidator(enumType: any): ValidatorFn {
   return (control: AbstractControl): { [key: string]: any } | null => {
@@ -28,7 +27,7 @@ export function enumValidator(enumType: any): ValidatorFn {
     styleUrl: './recipe-form.component.css'
 })
 export class RecipeFormComponent implements OnInit {
-  recipe?: Recipe = getFromResolvers<Recipe>('recipe');
+  @Input({required: true}) recipe!: Recipe;
   
   private recipeService = inject(RecipeService);
   private router = inject(Router);

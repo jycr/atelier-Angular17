@@ -1,7 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { Recipe } from '../models/recipe';
 import { ShoppingService } from '../services/shopping.service';
-import { getFromResolvers } from '../../utility';
 
 @Component({
   selector: 'app-recipe',
@@ -9,7 +8,8 @@ import { getFromResolvers } from '../../utility';
   styleUrl: './recipe.component.css'
 })
 export class RecipeComponent {
-  recipe?: Recipe = getFromResolvers<Recipe>('recipe');
+  @Input({required: true}) recipe!: Recipe;
+
   private shoppingService = inject(ShoppingService);
   
   stockerIngredient(recipe: Recipe) {
