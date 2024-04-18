@@ -23,6 +23,6 @@
 @if (!displayIdeas) {
     <button (click)="displayIdeas = true"><mat-icon fontIcon="people" /></button>
 }
-@if (!!displayIdeas) {
+@else {
     <app-ideas />
 }
