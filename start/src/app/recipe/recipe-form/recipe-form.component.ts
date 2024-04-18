@@ -1,6 +1,6 @@
 import { Component, DestroyRef, Input, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AbstractControl, UntypedFormArray, UntypedFormControl, UntypedFormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, ValidatorFn, Validators, ReactiveFormsModule, FormControl, FormGroup, FormArray } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Recipe, RecipeType, UnitOfMeasurement } from '../models/recipe';
 import { RecipeService } from '../services/recipe.service';
@@ -22,44 +22,61 @@ export function enumValidator(enumType: any): ValidatorFn {
   };
 }
 
-// type IngredientsForm = FormGroup<{
-//   quantity: FormControl<number>;
-//   unit: FormControl<UnitOfMeasurement>;
-//   name: FormControl<string>;
-// }>;
+type IngredientsForm = FormGroup<{
+  quantity: FormControl<number>;
+  unit: FormControl<UnitOfMeasurement>;
+  name: FormControl<string>;
+}>;
 
-// type InstructionForm = FormControl<string>;
+type InstructionForm = FormControl<string>;
+
+type RecipeForm = FormGroup<{
+  id: FormControl<number | null>;
+  name: FormControl<string | null>;
+  instructions: FormArray<FormControl<string>>;
+  photo: FormControl<string | null>;
+  version: FormControl<string>;
+  ingredients: FormArray<IngredientsForm>;
+  type: FormControl<RecipeType | null>;
+}>;
+
 @Component({
-    selector: 'app-recipe-form',
-    templateUrl: './recipe-form.component.html',
-    styleUrl: './recipe-form.component.css',
-    standalone: true,
-    imports: [ReactiveFormsModule, MatStepper, MatStep, MatStepLabel, MatStepContent, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatButton, MatStepperNext, MatIcon, MatStepperPrevious, RouterLink]
+  selector: 'app-recipe-form',
+  templateUrl: './recipe-form.component.html',
+  styleUrl: './recipe-form.component.css',
+  standalone: true,
+  imports: [ReactiveFormsModule, MatStepper, MatStep, MatStepLabel, MatStepContent, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatButton, MatStepperNext, MatIcon, MatStepperPrevious, RouterLink]
 })
 export class RecipeFormComponent implements OnInit {
-  @Input({required: true}) recipe!: Recipe;
-  
+  @Input({ required: true }) recipe!: Recipe;
+
   private recipeService = inject(RecipeService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
-  public formGroup = new UntypedFormGroup({
-    id: new UntypedFormControl(null),
-    name: new UntypedFormControl('', {
-      validators: [Validators.required, Validators.min(3)]
-    }), 
-    photo: new UntypedFormControl(''),
-    type: new UntypedFormControl(RecipeType.None, {
-      validators: [Validators.required, enumValidator(RecipeType)]
+  public formGroup = new FormGroup({
+    id: new FormControl<number | null>(null),
+    name: new FormControl('', {
+      validators: [Validators.required, Validators.min(3)],
+      nonNullable: true
     }),
-    ingredients: new UntypedFormArray([]),
-    instructions: new UntypedFormArray([]),
-    version: new UntypedFormControl('v2')
+    photo: new FormControl<string | undefined>(undefined, {
+      nonNullable: true
+    }),
+    type: new FormControl(RecipeType.None, {
+      validators: [Validators.required, enumValidator(RecipeType)],
+      nonNullable: true
+    }),
+    ingredients: new FormArray<IngredientsForm>([]),
+    instructions: new FormArray<InstructionForm>([]),
+    version: new FormControl<'v2'>('v2', {
+      nonNullable: true,
+    })
   });
 
-  recipeTypes:Array<string> = Object.values(RecipeType); 
-  unitOfMeasure:Array<string> = Object.values(UnitOfMeasurement); 
-  
+  recipeTypes: Array<string> = Object.values(RecipeType);
+  unitOfMeasure: Array<string> = Object.values(UnitOfMeasurement);
+
   ngOnInit(): void {
     if (!this.recipe || this.recipe.version !== 'v2') return;
     this.recipe.ingredients.forEach(() => this.addIngredient());
@@ -67,30 +84,36 @@ export class RecipeFormComponent implements OnInit {
   }
 
   get ingredientsForm() {
-    return this.formGroup.get('ingredients') as UntypedFormArray;
+    return this.formGroup.controls.ingredients;
   }
 
   addIngredient(): void {
-    this.ingredientsForm.push(new UntypedFormGroup({
-      quantity: new UntypedFormControl(0),
-      name: new UntypedFormControl(''),
-      unit: new UntypedFormControl(UnitOfMeasurement.None)
+    this.ingredientsForm.push(new FormGroup({
+      quantity: new FormControl(0, {
+        nonNullable: true
+      }),
+      name: new FormControl('', {
+        nonNullable: true
+      }),
+      unit: new FormControl<UnitOfMeasurement>(UnitOfMeasurement.None, {
+        nonNullable: true
+      })
     }));
   }
 
-  removeIngredientAt(index: number) : void {
+  removeIngredientAt(index: number): void {
     this.ingredientsForm.removeAt(index);
   }
 
   get instructionsForm() {
-    return this.formGroup.get('instructions') as UntypedFormArray;
+    return this.formGroup.controls.instructions;
   }
 
   addInstruction(): void {
-    this.instructionsForm.push(new UntypedFormControl(''));
+    this.instructionsForm.push(new FormControl<string>('', { nonNullable: true }));
   }
 
-  removeInstructiontAt(index: number) : void {
+  removeInstructiontAt(index: number): void {
     this.instructionsForm.removeAt(index);
   }
 
@@ -106,10 +129,10 @@ export class RecipeFormComponent implements OnInit {
     else
       obs = this.recipeService.create(recipe);
 
-      obs.pipe(
-        takeUntilDestroyed(this.destroyRef)
-      ).subscribe(() => {
-        this.router.navigateByUrl('/recipes');
-      })
+    obs.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.router.navigateByUrl('/recipes');
+    })
   }
 }
