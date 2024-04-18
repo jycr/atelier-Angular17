@@ -21,11 +21,13 @@
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let ingredient of recipe.ingredients">
+            @for (ingredient of recipe.ingredients; track ingredient) {
+                <tr>
                     <td>{{ingredient.quantity}}</td>
                     <td>{{ingredient.name}}</td>
                     <td>{{ingredient.unit}}</td>
                 </tr>
+            }
             </tbody>
         </table>
     </section>
@@ -33,7 +35,9 @@
     <section>
         <h2>Comment Faire ?</h2>
         <ul>
-            <li *ngFor="let how of recipe.instructions">{{how}}</li>
+        @for (how of recipe.instructions; track how) {
+          <li>{{how}}</li>
+        }
         </ul>
     </section>
 </section>
